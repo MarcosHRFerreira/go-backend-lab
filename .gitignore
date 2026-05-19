@@ -1,0 +1,30 @@
+# Sensitive files
+.env
+.env.*
+!.env.example
+
+# Local/editor artifacts
+.DS_Store
+Thumbs.db
+.vscode/
+node_modules/
+
+# Local-only print and study materials
+docs/print/*.md
+docs/print/*.html
+docs/print/*.pdf
+!docs/print/README.md
+!docs/print/export-apostila-pdf.ps1
+
+# Version only essential project docs
+docs/08-go-fundamentos-aplicados.md
+docs/09-ciclo-de-requisicao.md
+docs/10-main-e-auth-line-by-line.md
+docs/11-get-all-post-line-by-line.md
+docs/12-avaliacao-sistema-e-plano-de-melhorias.md
+docs/13-roadmap-de-execucao-das-melhorias.md
+docs/14-sprint-1-guiado-corretude-imediata.md
+docs/17-detalhamento-completo-da-suite-de-testes.md
+docs/18-boas-praticas-aprendidas.md
+docs/19-sumario-executivo-para-revisao.md
+docs/20-palavras-chave-do-go-e-quando-usar.md
