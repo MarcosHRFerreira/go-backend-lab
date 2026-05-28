@@ -9,6 +9,7 @@ Este repositorio foi evoluido como um projeto de estudo avancado e portfolio tec
 - autenticacao com JWT e refresh token
 - integracao com MySQL
 - testes unitarios e de integracao
+- logging estruturado, metricas e tracing
 - documentacao tecnica detalhada
 
 ## Objetivo
@@ -24,6 +25,7 @@ Ele foi usado para consolidar aprendizado em:
 - SQL manual com `database/sql`
 - testes automatizados
 - documentacao tecnica e trilha de estudo
+- observabilidade moderna com logs, metricas e traces
 
 ## Stack
 
@@ -33,6 +35,9 @@ Ele foi usado para consolidar aprendizado em:
 - JWT
 - `database/sql`
 - `go-playground/validator`
+- `log/slog`
+- Prometheus
+- OpenTelemetry
 - testes com `testing`, `httptest` e stubs
 - `golangci-lint`
 
@@ -49,6 +54,8 @@ Ele foi usado para consolidar aprendizado em:
 - criacao de comentarios
 - like e unlike de comentario
 - health check da aplicacao e do banco
+- endpoint de metricas Prometheus
+- tracing HTTP e banco com correlacao por `trace_id`
 
 ## Arquitetura
 
@@ -62,6 +69,7 @@ O projeto segue uma organizacao em camadas para deixar responsabilidades mais cl
 - `internal/dto`: contratos de entrada e saida
 - `internal/model`: estruturas de dominio usadas no projeto
 - `internal/middleware`: autenticacao e middleware HTTP
+- `internal/observability`: logger, metricas, tracing e helpers de contexto
 - `internal/httpresponse`: respostas padronizadas e parsing de request
 - `internal/apperror`: padronizacao de erros de aplicacao
 - `pkg/internalsql`: conexao com banco, JWT e refresh token
@@ -107,6 +115,10 @@ Esse modelo ajuda a separar:
 
 - `GET /check-health`
 
+### Observabilidade
+
+- `GET /metrics`
+
 ## Melhorias Tecnicas Ja Aplicadas
 
 Ao longo da evolucao do projeto, foram aplicadas melhorias importantes de corretude e maturidade:
@@ -122,6 +134,14 @@ Ao longo da evolucao do projeto, foram aplicadas melhorias importantes de corret
 - middleware de autenticacao mais robusto
 - testes unitarios de services
 - testes de integracao dos principais endpoints
+- logs estruturados com `slog`
+- correlacao por `request_id`
+- access log e recovery estruturados
+- logs de negocio na camada de service
+- metricas HTTP com Prometheus
+- metrica de duracao de query no banco
+- tracing HTTP e banco com OpenTelemetry
+- correlacao de `trace_id` com logs
 
 ## Como Rodar Localmente
 
@@ -145,6 +165,9 @@ O projeto le estas variaveis:
 - `DB_PASSWORD`
 - `DB_PORT`
 - `DATABASE_URL`
+- `APP_ENV`
+- `APP_VERSION`
+- `LOG_LEVEL`
 
 Exemplo de `.env`:
 
@@ -157,6 +180,9 @@ DB_NAME=go_tweets
 DB_PASSWORD=superSecret
 DB_PORT=3306
 DATABASE_URL=mysql://dbeaver:superSecret@tcp(127.0.0.1:3306)/go_tweets
+APP_ENV=development
+APP_VERSION=dev
+LOG_LEVEL=debug
 ```
 
 ### 3. Execute as migrations
@@ -176,6 +202,29 @@ go run ./cmd
 ```
 
 Por padrao, a aplicacao sobe em `http://localhost:8080`.
+
+## Observabilidade
+
+O projeto ja possui uma base moderna de observabilidade para estudo e portfolio:
+
+- logs estruturados em JSON com `slog`
+- `request_id` por requisicao
+- `trace_id` retornado em `X-Trace-ID`
+- access log estruturado
+- recovery com log de panic e stack
+- metricas HTTP e de banco em `/metrics`
+- tracing HTTP e banco com OpenTelemetry
+
+Headers uteis durante debug:
+
+- `X-Request-ID`
+- `X-Trace-ID`
+
+Endpoint de metricas:
+
+```text
+GET /metrics
+```
 
 ## Testes
 
@@ -214,6 +263,7 @@ O material inclui:
 - organizacao das camadas
 - schema e migrations
 - estrategia de testes automatizados
+- logging e observabilidade profissional
 
 Materiais de estudo pessoais, apostilas impressas, guias consolidados e planos de carreira podem ser mantidos localmente, mas nao fazem parte da versao essencial do repositorio.
 
@@ -232,7 +282,8 @@ Ele nao tenta se vender como sistema corporativo em producao, mas como uma base 
 - adicionar CI com GitHub Actions
 - incluir colecao de requests ou arquivo `.http`
 - documentar exemplos de payload por endpoint
-- adicionar observabilidade mais profunda
+- integrar OTLP com collector, Jaeger ou Grafana Tempo
+- adicionar dashboards e alertas reais
 - incluir benchmarks em fluxos criticos
 
 ## Autor
