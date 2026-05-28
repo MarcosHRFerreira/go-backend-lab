@@ -5,6 +5,8 @@ import (
 )
 
 func (r *commentRepository) DeleteLikeComment(ctx context.Context, commentID, userID int) error {
+	// Remove the stored reaction row when the user undoes a previous like.
+	// Remove a linha de reacao armazenada quando o usuario desfaz um like anterior.
 	query := `DELETE FROM comment_likes
 	WHERE comment_id = ?
 	AND user_id = ?`

@@ -6,6 +6,8 @@ import (
 )
 
 func (r *commentRepository) StoreComment(ctx context.Context, model *model.CommentModel) error {
+	// Persist the comment after the service validates that the target post exists.
+	// Persiste o comentario depois que o service valida que o post de destino existe.
 	query := `INSERT INTO comments (post_id, user_id, content, created_at, updated_at)
 	VALUES (?, ?, ?, ?, ?)`
 

@@ -3,9 +3,9 @@ package user
 
 import (
 	"context"
-	"database/sql"
 
 	"go-tweets/internal/model"
+	"go-tweets/pkg/internalsql"
 	"time"
 )
 
@@ -19,10 +19,10 @@ type UserRepository interface {
 }
 
 type userRepository struct {
-	db *sql.DB
+	db internalsql.QueryExecutor
 }
 
-func NewRepository(db *sql.DB) UserRepository {
+func NewRepository(db internalsql.QueryExecutor) UserRepository {
 	return &userRepository{
 		db: db,
 	}

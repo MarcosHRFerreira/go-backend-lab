@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"io"
+	"log/slog"
 	"net/http/httptest"
 	"testing"
 
@@ -12,6 +14,10 @@ import (
 	commenthandler "go-tweets/internal/handler/comment"
 	posthandler "go-tweets/internal/handler/post"
 	userhandler "go-tweets/internal/handler/user"
+	"go-tweets/internal/middleware"
+	obslogger "go-tweets/internal/observability/logger"
+	obsmetrics "go-tweets/internal/observability/metrics"
+	obstracing "go-tweets/internal/observability/tracing"
 	commentservice "go-tweets/internal/service/comment"
 	postservice "go-tweets/internal/service/post"
 	userservice "go-tweets/internal/service/user"
@@ -135,12 +141,40 @@ func newIntegrationConfig() *config.Config {
 	}
 }
 
+func newTestLogger() *slog.Logger {
+	return obslogger.New(obslogger.Config{
+		Service: "go-tweets",
+		Env:     "test",
+		Version: "test",
+		Writer:  io.Discard,
+	})
+}
+
 func newTestRouter(userSvc userservice.UserService, postSvc postservice.PostService, commentSvc commentservice.CommentService) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 
 	router := gin.New()
 	validate := validator.New()
 	cfg := newIntegrationConfig()
+	logger := newTestLogger()
+	metricsRegistry := obsmetrics.NewRegistry()
+	traceProvider, err := obstracing.NewProvider(obstracing.Config{
+		Service: "go-tweets",
+		Env:     "test",
+		Version: "test",
+		Writer:  io.Discard,
+	})
+	if err != nil {
+		panic(err)
+	}
+	slog.SetDefault(logger)
+
+	router.Use(middleware.RequestID(logger))
+	router.Use(middleware.Trace(traceProvider.Tracer("go-tweets/http")))
+	router.Use(metricsRegistry.HTTPMiddleware())
+	router.Use(middleware.AccessLog())
+	router.Use(middleware.Recovery())
+	router.GET("/metrics", gin.WrapH(metricsRegistry.Handler()))
 
 	userhandler.NewHandler(router, validate, userSvc).RouteList(cfg.SecretJwt)
 	posthandler.NewHandler(router, validate, postSvc).RouteList(cfg.SecretJwt)

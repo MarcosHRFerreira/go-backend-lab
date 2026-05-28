@@ -6,6 +6,8 @@ import (
 )
 
 func (r *postRepository) StorePost(ctx context.Context, model *model.PostModel) (int, error) {
+	// Insert the canonical post data after validation and ownership were enforced upstream.
+	// Insere os dados canonicos do post depois que validacao e autoria foram garantidas acima.
 	query := `INSERT INTO posts (user_id, title, content, created_at, updated_at) 
 	VALUES (?,?,?,?,?)`
 
@@ -15,6 +17,8 @@ func (r *postRepository) StorePost(ctx context.Context, model *model.PostModel) 
 		return 0, err
 	}
 
+	// Return the generated identifier so the service can expose it to the client.
+	// Retorna o identificador gerado para que o service possa expor esse valor ao cliente.
 	id, err := result.LastInsertId()
 	if err != nil {
 		return 0, err

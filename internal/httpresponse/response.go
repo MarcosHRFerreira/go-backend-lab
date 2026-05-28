@@ -2,8 +2,11 @@
 package httpresponse
 
 import (
+	"errors"
 	"fmt"
 	"go-tweets/internal/apperror"
+	"go-tweets/internal/observability/logctx"
+	"log/slog"
 	"net/http"
 	"reflect"
 	"strconv"
@@ -34,7 +37,22 @@ func JSONErrorFromErr(c *gin.Context, statusCode int, err error) {
 }
 
 func JSONAppError(c *gin.Context, err error) {
-	JSONError(c, apperror.StatusCode(err), err.Error())
+	statusCode := apperror.StatusCode(err)
+	if statusCode >= http.StatusInternalServerError {
+		requestLogger := logctx.FromContext(c.Request.Context())
+		args := []any{
+			slog.Int("status_code", statusCode),
+			slog.String("error", err.Error()),
+		}
+
+		if cause := errors.Unwrap(err); cause != nil {
+			args = append(args, slog.String("cause", cause.Error()))
+		}
+
+		requestLogger.Error("request failed", args...)
+	}
+
+	JSONError(c, statusCode, err.Error())
 }
 
 func AbortJSONError(c *gin.Context, statusCode int, message string) {
@@ -44,11 +62,15 @@ func AbortJSONError(c *gin.Context, statusCode int, message string) {
 }
 
 func BindAndValidateJSON(c *gin.Context, validate *validator.Validate, req interface{}) bool {
+	// Reject malformed JSON before running struct validation rules.
+	// Rejeita JSON malformado antes de executar as regras de validacao do struct.
 	if err := c.ShouldBindJSON(req); err != nil {
 		JSONError(c, http.StatusBadRequest, "invalid request body")
 		return false
 	}
 
+	// Run declarative validation tags so handlers stay focused on orchestration.
+	// Executa as tags declarativas de validacao para que os handlers continuem focados na orquestracao.
 	if err := validate.Struct(req); err != nil {
 		JSONValidationError(c, err, req)
 		return false
@@ -72,6 +94,8 @@ func JSONValidationError(c *gin.Context, err error, req interface{}) {
 			fieldName = strings.ToLower(validationErr.Field())
 		}
 
+		// Return JSON field names instead of Go struct names to keep the API contract user-facing.
+		// Retorna os nomes JSON dos campos em vez dos nomes do struct Go para manter o contrato da API orientado ao cliente.
 		details = append(details, ErrorDetail{
 			Field:   fieldName,
 			Message: validationMessage(validationErr, fieldNames),
@@ -112,6 +136,8 @@ func jsonFieldNames(req interface{}) map[string]string {
 		return map[string]string{}
 	}
 
+	// Accept both struct values and pointers so handlers can pass request DTOs naturally.
+	// Aceita tanto valores struct quanto ponteiros para que os handlers possam passar DTOs de requisicao de forma natural.
 	if reqType.Kind() == reflect.Ptr {
 		reqType = reqType.Elem()
 	}

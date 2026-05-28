@@ -3,8 +3,8 @@ package comment
 
 import (
 	"context"
-	"database/sql"
 	"go-tweets/internal/model"
+	"go-tweets/pkg/internalsql"
 )
 
 type CommentRepository interface {
@@ -17,10 +17,10 @@ type CommentRepository interface {
 }
 
 type commentRepository struct {
-	db *sql.DB
+	db internalsql.QueryExecutor
 }
 
-func NewCommentRepository(db *sql.DB) CommentRepository {
+func NewCommentRepository(db internalsql.QueryExecutor) CommentRepository {
 	return &commentRepository{
 		db: db,
 	}

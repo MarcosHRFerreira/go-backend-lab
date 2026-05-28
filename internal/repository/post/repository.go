@@ -3,9 +3,9 @@ package post
 
 import (
 	"context"
-	"database/sql"
 	"go-tweets/internal/dto"
 	"go-tweets/internal/model"
+	"go-tweets/pkg/internalsql"
 	"time"
 )
 
@@ -22,10 +22,10 @@ type PostRepository interface {
 }
 
 type postRepository struct {
-	db *sql.DB
+	db internalsql.QueryExecutor
 }
 
-func NewPostRepository(db *sql.DB) PostRepository {
+func NewPostRepository(db internalsql.QueryExecutor) PostRepository {
 	return &postRepository{
 		db: db,
 	}

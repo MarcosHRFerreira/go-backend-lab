@@ -8,6 +8,8 @@ import (
 
 func (r *postRepository) GetAllPost(ctx context.Context, param *dto.GetAllPostRequest, offset int) ([]model.PostWithUserModel, error) {
 
+	// The query denormalizes username and like count so the service can build the timeline response directly.
+	// A query desnormaliza username e quantidade de likes para que o service possa montar a timeline diretamente.
 	query := `SELECT
 	p.id, p.title, p.content, p.user_id, p.created_at, p.updated_at, u.username, COUNT(pl.id) as like_count
 	FROM posts as p 
@@ -25,6 +27,8 @@ func (r *postRepository) GetAllPost(ctx context.Context, param *dto.GetAllPostRe
 	}
 	defer rows.Close()
 
+	// Scan each row into a strongly typed model to keep SQL concerns inside the repository layer.
+	// Faz o scan de cada linha em um model fortemente tipado para manter as preocupacoes de SQL dentro da camada de repository.
 	result := make([]model.PostWithUserModel, 0)
 	for rows.Next() {
 		var data model.PostWithUserModel

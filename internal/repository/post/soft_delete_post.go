@@ -7,6 +7,8 @@ import (
 )
 
 func (r *postRepository) SoftDeletePost(ctx context.Context, postID int, now time.Time) error {
+	// Mark the post as deleted instead of removing it physically to preserve historical data.
+	// Marca o post como deletado em vez de removelo fisicamente para preservar dados historicos.
 	query := `UPDATE posts SET delete_at = ?
 	WHERE id = ?`
 
@@ -20,6 +22,8 @@ func (r *postRepository) SoftDeletePost(ctx context.Context, postID int, now tim
 		return err
 	}
 	if rowsAffected == 0 {
+		// Report the absence of affected rows so upper layers can detect inconsistent state.
+		// Informa a ausencia de linhas afetadas para que as camadas acima detectem estado inconsistente.
 		return errors.New("nothing to update data")
 	}
 	return nil
