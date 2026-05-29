@@ -239,6 +239,66 @@ Tipos de teste presentes no projeto:
 - unitarios em `test/unit`
 - integracao HTTP em `test/integration`
 
+## Teste De Stress
+
+O repositorio possui um script reutilizavel para executar carga na timeline:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\run-stress-test.ps1
+```
+
+Exemplo com parametros customizados:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\run-stress-test.ps1 -Requests 5000 -Concurrency 100 -SeedPosts 20
+```
+
+O script:
+
+- sobe o MySQL com `docker compose`
+- aplica as migrations com `dbmate`
+- sobe a API se ela nao estiver rodando
+- cria usuario e posts de seed
+- executa carga com `hey`
+- consulta um snapshot de `/metrics`
+- encerra API e banco ao final, a menos que voce use `-KeepRunning`
+
+Existe tambem uma segunda versao com cenario misto de `login`, `listagem` e `criacao de post`:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\run-stress-test-mixed.ps1
+```
+
+Exemplo com parametros customizados:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\run-stress-test-mixed.ps1 -LoginRequests 500 -ReadRequests 3000 -WriteRequests 500 -LoginConcurrency 30 -ReadConcurrency 80 -WriteConcurrency 20
+```
+
+O script misto executa tres fases:
+
+- autenticacao em `POST /auth/login`
+- leitura em `GET /tweets/`
+- escrita em `POST /tweets/`
+
+Existe ainda uma terceira versao com perfil mais proximo de uso real, executando os cenarios ao mesmo tempo com distribuicao por peso:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\run-stress-test-realistic.ps1
+```
+
+Exemplo com parametros customizados:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\run-stress-test-realistic.ps1 -TotalRequests 4000 -TotalConcurrency 80 -ReadPercent 70 -LoginPercent 20 -WritePercent 10
+```
+
+O script realista:
+
+- roda `GET /tweets/`, `POST /auth/login` e `POST /tweets/` em paralelo
+- distribui requests e concorrencia com base em percentuais
+- usa por padrao o perfil `70% leitura`, `20% login` e `10% escrita`
+
 ## Qualidade de Codigo
 
 Ferramentas e praticas usadas no projeto:
